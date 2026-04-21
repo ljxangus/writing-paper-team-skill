@@ -1,7 +1,12 @@
 ---
 name: prompts-collection
 description: Use when translating, polishing, or de-AIifying academic text - provides ready-to-use prompt templates for translation, revision, de-AIification, and figure/table caption generation
-allowed-tools: Read Write Edit
+# Hermes Agent
+tools: [read, write, edit]
+# WorkBuddy MCP
+mcp_servers: []
+# Claude Code
+subagent_types: []
 ---
 
 # Prompts Collection — 学术文本提示词集合

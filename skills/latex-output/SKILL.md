@@ -1,7 +1,12 @@
 ---
 name: latex-output
 description: Use when user asks to output paper as LaTeX, provides a LaTeX template, or targets a journal requiring LaTeX format - converts Markdown chapters to compilable .tex files with BibTeX references
-allowed-tools: Read Write Edit Bash
+# Hermes Agent
+tools: [bash, read, write, edit]
+# WorkBuddy MCP
+mcp_servers: []
+# Claude Code
+subagent_types: []
 ---
 
 # LaTeX Output Skill

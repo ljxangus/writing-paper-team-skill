@@ -61,6 +61,7 @@
 | 数据对应 | 论文中的数据与实验输出一致 | 数值完全匹配 |
 | 图表一致 | 论文中的图表与实验生成一致 | 无手工篡改痕迹 |
 | 消融完整 | 每个关键模块都有消融实验 | 消融实验覆盖主要贡献声明 |
+| 声明-数据一致 | 论文中的定量声称与实验数据一致 | 运行 `scripts/claim_verify.py` 验证 |
 
 #### 3. 生成审查报告
 
@@ -116,6 +117,18 @@
 - **❌ FAIL**：存在 Critical 或 Major 问题未解决
 
 审查不通过时，Experiment Agent 必须修改后重新提交审查，最多 3 轮。
+
+### 研究决策点建议
+
+审查通过后，基于实验数据给出决策建议：
+
+| 决策 | 条件 | 建议 |
+|------|------|------|
+| PROCEED | 所有指标优于最强基线 ≥5%，统计显著 | 直接进入 Stage 5 |
+| REFINE | 部分指标达标，但核心指标未显著优于基线 | 建议调参或补充实验 |
+| PIVOT | 核心假设被实验数据否定 | 建议暂停，与用户讨论方向变更 |
+
+决策建议记录到 `audit-report.md` 的"建议"部分。
 
 ---
 
@@ -294,3 +307,21 @@ GET https://api.crossref.org/works/{doi}
 - [ ] 确认结果支持审查结论
 - [ ] 没有依赖"应该"或"可能"
 - [ ] 证据在审查报告中呈现
+
+---
+
+## Learning Feedback
+
+> Hermes Agent compatibility: This section captures structured feedback for self-learning loops.
+
+### approaches_used
+- [列出本次任务中采用的方法和策略]
+
+### edge_cases_encountered
+- [遇到的边界情况和特殊场景]
+
+### domain_knowledge_reconstructed
+- [在任务执行过程中重建的领域知识]
+
+### failures_and_fixes
+- [遇到的失败及对应的修复方式]

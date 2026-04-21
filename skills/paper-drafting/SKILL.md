@@ -1,6 +1,19 @@
-# Writing Agent — 角色定义
+---
+name: paper-drafting
+description: Use when drafting academic paper chapters - implements Writing Agent Stage 3 workflow with de-AIification standards, section-by-section writing, and two-stage review process
+# Hermes Agent
+tools: [bash, read, write, edit]
+# WorkBuddy MCP
+mcp_servers: [style_check]
+# Claude Code
+subagent_types: [writing]
+---
 
-你是一名学术论文写作 Agent。你的任务是根据大纲和文献素材，按章节撰写符合 IEEE/ACM 标准的学术论文。你还在审稿后负责综合修改意见对论文进行修订。
+# Paper Drafting — 学术论文起草技能
+
+独立的学术论文起草技能，基于 Writing Agent Stage 3 工作流程，执行按章节写作、去AI化处理和两阶段审查。
+
+---
 
 ## 核心原则
 
@@ -9,7 +22,9 @@
 3. **结构严谨** — 遵循 IMRAD 结构，逻辑链完整
 4. **客观表述** — 使用 "this paper", "the results indicate"，避免主观化表达
 
-## 写作规范（详见 references/writing-standards.md）
+---
+
+## 写作规范
 
 ### 去 AI 化规则
 
@@ -47,9 +62,11 @@ implementation of Y. Comprehensive evaluation on Z demonstrates the
 effectiveness and scalability of the proposed approach.
 ```
 
+---
+
 ## 写作工作流程
 
-### 首次写作（Stage 3）
+### 首次写作
 
 1. 读取 `plan/outline.md` 获取章节目标
 2. 读取 `references/writing-standards.md` 获取写作规范
@@ -59,13 +76,7 @@ effectiveness and scalability of the proposed approach.
 6. 每章完成后执行两阶段 Review
 7. 更新 `plan/progress.md`
 
-### 审稿后修改（Stage 5）
-
-1. 读取三份审稿报告 `reviews/review-1.md`, `review-2.md`, `review-3.md`
-2. 将意见按 Critical / Major / Minor 分类
-3. 对每条意见制定修改方案
-4. 执行修改，更新 `chapters/*.md`
-5. 生成 `reviews/response-letter.md`
+---
 
 ## 章节写作指南
 
@@ -87,7 +98,7 @@ effectiveness and scalability of the proposed approach.
 
 ### Related Work
 
-- 基于 DeepSearch Agent 的 `related-work.md` 素材
+- 基于文献搜索技能的 `related-work.md` 素材
 - 按主题/方法组织，不按论文逐一罗列
 - 必须有批判性分析，指出局限性
 - 明确指出研究空白和本研究定位
@@ -123,39 +134,48 @@ effectiveness and scalability of the proposed approach.
 - 提出未来方向
 - 不引入新信息
 
-## 审稿修改工作流程
+---
 
-### 意见分类标准
+## 两阶段 Review
 
-| 级别 | 定义 | 处理方式 |
-|------|------|----------|
-| Critical | 影响论文核心结论或有效性 | 必须修改，补充实验或重写相关章节 |
-| Major | 显著影响论文质量但不影响核心结论 | 必须修改，可能需要补充分析 |
-| Minor | 改善清晰度和完整性 | 尽量修改，可酌情省略 |
+### 阶段 1：规范合规检查
 
-### Response Letter 格式
+| 检查项 | 标准 |
+|--------|------|
+| 字数 | 符合目标（±10%） |
+| 结构 | 章节完整，小节清晰 |
+| 引用格式 | IEEE 或 ACM 格式统一 |
+| 标题层级 | 符合论文规范 |
+| 图表编号 | 连续且有标题 |
+| 参考文献完整性 | 每条至少有作者/标题/年份/出处 |
 
-```markdown
-# Response to Reviewers
+### 阶段 2：质量检查
 
-We thank the reviewers for their constructive feedback. Below, we address each comment point by point. Modifications in the revised manuscript are highlighted in blue.
+| 检查项 | 标准 |
+|--------|------|
+| 去AI化 | 无机械过渡词、无空壳强调句、无 AI 高频词滥用 |
+| 语言 | 学术英语，客观表述，长短句交替 |
+| 引用 | 所有引用可追溯，无编造 |
+| 段落 | 连贯叙述，无列表堆砌 |
+| 学术表达 | 贡献声称与实际成果匹配，无过度声称 |
 
-## Reviewer 1
+---
 
-**[W1] Critical: The experimental setup lacks...**
-*Response:* We agree with the reviewer. We have added... (see Section IV-B, Page 5).
+## 章节写作顺序
 
-**[W2] Major: The comparison with X is unfair because...**
-*Response:* We appreciate this observation. We have re-run the experiment...
+推荐按以下顺序写作（可调整）：
 
-**[M1] Minor: Figure 3 is hard to read.**
-*Response:* We have redesigned Figure 3 with larger fonts and clearer labels.
+1. Introduction
+2. Related Work
+3. Methodology / System Architecture
+4. Experiment Setup（留占位符，Stage 4 填充）
+5. Results & Discussion（留占位符，Stage 4 填充）
+6. Conclusion
+7. Abstract（最后写）
 
-## Reviewer 2
-...
-```
+---
 
-## 质量检查
+## 质量检查（Checklist）
 
 每章写完后自检：
 
@@ -166,38 +186,11 @@ We thank the reviewers for their constructive feedback. Below, we address each c
 - [ ] 字数符合目标
 - [ ] 章节结构完整
 
-修改后额外检查：
-
-- [ ] Critical 和 Major 意见全部处理
-- [ ] Response Letter 逐条对应
-- [ ] 修改未引入新的去AI化问题
-
-### 修订后长度守卫
-
-Stage 5 修订完成后，检查总词数：
-
-1. 统计修订后各章节词数
-2. 对比修订前总词数
-3. 规则：
-   - 如果总词数增加超过 20%：标记警告，检查是否引入无关内容
-   - 如果总词数减少超过 10%：标记警告，检查是否遗漏关键内容
-   - 如果任何章节词数变化超过 ±30%：逐段检查该章节
-4. 长度报告追加到 `reviews/response-letter.md`
-
 ---
 
-## Learning Feedback
+## 相关参考
 
-> Hermes Agent compatibility: This section captures structured feedback for self-learning loops.
-
-### approaches_used
-- [列出本次任务中采用的方法和策略]
-
-### edge_cases_encountered
-- [遇到的边界情况和特殊场景]
-
-### domain_knowledge_reconstructed
-- [在任务执行过程中重建的领域知识]
-
-### failures_and_fixes
-- [遇到的失败及对应的修复方式]
+- 完整 Agent 定义：`references/agent-writing.md`
+- 写作标准：`references/writing-standards.md`
+- 去AI化提示词：`skills/prompts-collection/SKILL.md`
+- 风格检查脚本：`scripts/style_check.sh`

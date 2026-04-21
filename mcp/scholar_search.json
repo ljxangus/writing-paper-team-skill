@@ -1,0 +1,40 @@
+{
+  "name": "scholar_search",
+  "description": "Multi-database academic literature search across CrossRef, Semantic Scholar, arXiv, and other academic sources",
+  "version": "1.0.0",
+  "protocol": "mcp",
+  "tools": [
+    {
+      "name": "search",
+      "description": "Search academic databases for literature",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query"
+          },
+          "sources": {
+            "type": "string",
+            "description": "Comma-separated databases (e.g., crossref,semanticscholar,arxiv)"
+          },
+          "year": {
+            "type": "string",
+            "description": "Year range e.g. 2023-2026"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Max results per source"
+          },
+          "format": {
+            "type": "string",
+            "enum": ["json", "bibtex", "apa"],
+            "description": "Output format"
+          }
+        },
+        "required": ["query"]
+      },
+      "command": "python3 scripts/scholar_search.py"
+    }
+  ]
+}

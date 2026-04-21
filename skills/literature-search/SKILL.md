@@ -1,6 +1,19 @@
-# DeepSearch Agent — 角色定义
+---
+name: literature-search
+description: Use when conducting academic literature search for research papers - performs multi-database search, relevance filtering, and gap analysis using DeepSearch Agent workflow
+# Hermes Agent
+tools: [bash, read, write, edit]
+# WorkBuddy MCP
+mcp_servers: [scholar_search]
+# Claude Code
+subagent_types: [deep-search]
+---
 
-你是一名学术论文深度搜索 Agent。你的任务是针对给定课题，系统性搜索学术文献，识别高相关性 RelatedWork，分析研究空白，为论文写作提供素材基础。
+# Literature Search — 学术文献搜索技能
+
+独立的学术文献搜索技能，基于 DeepSearch Agent 工作流程，执行系统性文献检索、相关性筛选和研究空白分析。
+
+---
 
 ## 核心原则
 
@@ -9,16 +22,17 @@
 3. **可追溯性** — 每篇论文必须有 DOI 或可验证的来源链接
 4. **分析深度** — 不仅罗列论文，还要分析其关系（互补、矛盾、演进）
 
+---
+
 ## 工作流程
 
 ### Step 1: 理解课题
 
-读取 `plan/project-overview.md`，提取：
+提取研究信息：
 - 论文题目
 - 研究问题
 - 关键技术术语
 - 目标领域
-- `plan/problem-tree.md`（如存在）：读取问题分解树，将子问题和搜索概念纳入搜索策略
 
 ### Step 2: 生成搜索策略
 
@@ -42,12 +56,7 @@ python3 scripts/scholar_search.py "query" --sources crossref,semanticscholar,arx
 python3 scripts/scholar_search.py "query" --sources crossref --format bibtex -o papers/references.bib
 ```
 
-#### 3.2 已有 Skill 增强
-
-- 调用 `paper-lookup` skill 覆盖更多数据库（PubMed, bioRxiv, medRxiv, OpenAlex, CORE, Unpaywall）
-- 调用 `ArXiv论文精读` skill 对关键论文进行深度阅读
-
-#### 3.3 WebSearch 补充
+#### 3.2 WebSearch 补充
 
 对脚本无法覆盖的领域，使用 WebSearch 搜索：
 - Google Scholar
@@ -86,17 +95,7 @@ python3 scripts/scholar_search.py "query" --sources crossref --format bibtex -o 
   "limitations": "已知的局限性",
   "relation_to_our_work": "complementary | contradictory | extending | baseline | foundational",
   "relevance_score": 8.5,
-  "relevance_justification": "为什么与本课题相关",
-  "knowledge_card": {
-    "problem_addressed": "What problem does this paper solve",
-    "method_category": "e.g., deep learning, optimization, formal methods",
-    "key_technique": "The core technique used",
-    "strengths": ["strength1", "strength2"],
-    "weaknesses": ["weakness1"],
-    "comparable_papers": ["DOI1", "DOI2"],
-    "reproducibility": "high/medium/low",
-    "open_source": true/false
-  }
+  "relevance_justification": "为什么与本课题相关"
 }
 ```
 
@@ -146,17 +145,7 @@ python3 scripts/scholar_search.py "query" --sources crossref --format bibtex -o 
 - Key papers: [list top 5 DOI]
 ```
 
-### Step 8: Confidence Assessment
-
-对搜索结果的整体信心度评估：
-
-```
-confidence: high | medium | low
-confidence_justification: [为什么是这个信心度]
-missing_areas: [可能遗漏的领域]
-```
-
-SmartPause：在 `auto-approve` 或 `co-pilot` 模式下，如果 confidence 为 `low`，自动暂停并通知用户。
+---
 
 ## 搜索策略建议
 
@@ -173,7 +162,9 @@ SmartPause：在 `auto-approve` 或 `co-pilot` 模式下，如果 confidence 为
 1. 从各领域分别搜索
 2. 关注跨领域引用
 
-## 质量检查
+---
+
+## 质量检查（Checklist）
 
 完成搜索后，自检：
 
@@ -186,18 +177,7 @@ SmartPause：在 `auto-approve` 或 `co-pilot` 模式下，如果 confidence 为
 
 ---
 
-## Learning Feedback
+## 相关参考
 
-> Hermes Agent compatibility: This section captures structured feedback for self-learning loops.
-
-### approaches_used
-- [列出本次任务中采用的方法和策略]
-
-### edge_cases_encountered
-- [遇到的边界情况和特殊场景]
-
-### domain_knowledge_reconstructed
-- [在任务执行过程中重建的领域知识]
-
-### failures_and_fixes
-- [遇到的失败及对应的修复方式]
+- 完整 Agent 定义：`references/agent-deep-search.md`
+- 搜索脚本：`scripts/scholar_search.py`

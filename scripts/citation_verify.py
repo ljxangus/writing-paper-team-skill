@@ -95,6 +95,66 @@ def verify_doi(doi: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Semantic Scholar verification (Layer 2)
+# ---------------------------------------------------------------------------
+
+def verify_semanticscholar(title: str) -> dict:
+    """Verify a paper exists on Semantic Scholar by title search."""
+    if not title:
+        return {"found": False, "error": "No title provided"}
+
+    url = f"https://api.semanticscholar.org/graph/v1/paper/search?query={urllib.parse.quote(title)}&limit=3&fields=title,year,authors,externalIds"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "citation-verify/1.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        for paper in data.get("data", []):
+            pt = re.sub(r"[^a-z0-9]", "", (paper.get("title") or "").lower())
+            et = re.sub(r"[^a-z0-9]", "", title.lower())
+            if pt == et:
+                ext = paper.get("externalIds", {})
+                return {
+                    "found": True,
+                    "semantic_scholar_id": paper.get("paperId", ""),
+                    "doi": ext.get("DOI", ""),
+                    "arxiv": ext.get("ArXiv", ""),
+                    "title": paper.get("title", ""),
+                    "year": paper.get("year"),
+                }
+        return {"found": False, "error": "Title not found on Semantic Scholar"}
+    except Exception as e:
+        return {"found": False, "error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# arXiv verification (Layer 3)
+# ---------------------------------------------------------------------------
+
+def verify_arxiv(arxiv_id: str) -> dict:
+    """Verify a paper on arXiv by its ID."""
+    if not arxiv_id:
+        return {"found": False, "error": "No arXiv ID provided"}
+
+    url = f"http://export.arxiv.org/api/query?id_list={urllib.parse.quote(arxiv_id)}"
+    try:
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            xml_data = resp.read().decode("utf-8")
+        import xml.etree.ElementTree as ET
+        ns = {"atom": "http://www.w3.org/2005/Atom"}
+        root = ET.fromstring(xml_data)
+        entries = root.findall("atom:entry", ns)
+        if entries:
+            entry = entries[0]
+            title = entry.find("atom:title", ns).text or ""
+            title = " ".join(title.split())
+            return {"found": True, "title": title}
+        return {"found": False, "error": "Not found on arXiv"}
+    except Exception as e:
+        return {"found": False, "error": str(e)}
+
+
+# ---------------------------------------------------------------------------
 # Information accuracy check
 # ---------------------------------------------------------------------------
 
@@ -163,15 +223,19 @@ def main():
     parser.add_argument("--check-info", action="store_true", help="Check author/year/title accuracy")
     parser.add_argument("--check-format", action="store_true", help="Check format consistency")
     parser.add_argument("--check-all", action="store_true", help="Run all checks")
+    parser.add_argument("--check-semantic-scholar", action="store_true", help="Verify via Semantic Scholar (Layer 2)")
+    parser.add_argument("--check-arxiv", action="store_true", help="Verify via arXiv (Layer 3)")
     parser.add_argument("--output", default=None, help="Output report file (JSON)")
     parser.add_argument("--delay", type=float, default=0.5, help="Delay between DOI checks (seconds)")
     args = parser.parse_args()
 
     if args.check_all:
         args.check_doi = args.check_info = args.check_format = True
+        args.check_semantic_scholar = True
+        args.check_arxiv = True
 
-    if not any([args.check_doi, args.check_info, args.check_format]):
-        print("No checks selected. Use --check-doi, --check-info, --check-format, or --check-all", file=sys.stderr)
+    if not any([args.check_doi, args.check_info, args.check_format, args.check_semantic_scholar, args.check_arxiv]):
+        print("No checks selected. Use --check-doi, --check-info, --check-format, --check-semantic-scholar, --check-arxiv, or --check-all", file=sys.stderr)
         sys.exit(1)
 
     # Read and parse input
@@ -206,6 +270,33 @@ def main():
                 info_issues = check_info(entry, result)
                 entry_report["issues"].extend(info_issues)
 
+        if args.check_semantic_scholar and entry["title"]:
+            print(f"  [{i+1}/{len(entries)}] Checking Semantic Scholar: {entry['title'][:50]}", file=sys.stderr)
+            ss_result = verify_semanticscholar(entry["title"])
+            entry_report["semantic_scholar_found"] = ss_result.get("found", False)
+            if not ss_result.get("found"):
+                entry_report["issues"].append(f"Semantic Scholar: {ss_result.get('error', 'not found')}")
+            elif ss_result.get("doi") and entry["doi"] and ss_result["doi"] != entry["doi"]:
+                entry_report["issues"].append(f"DOI mismatch: entry has {entry['doi']}, Semantic Scholar has {ss_result['doi']}")
+            time.sleep(args.delay)
+
+        if args.check_arxiv:
+            # Try to find arXiv ID from DOI or entry fields
+            arxiv_id = ""
+            for field_name in ["arxivid", "eprint"]:
+                if entry.get("fields", {}).get(field_name):
+                    arxiv_id = entry["fields"][field_name]
+                    break
+            if not arxiv_id and entry["doi"] and entry["doi"].startswith("10.48550/"):
+                arxiv_id = entry["doi"].replace("10.48550/", "")
+            if arxiv_id:
+                print(f"  [{i+1}/{len(entries)}] Checking arXiv: {arxiv_id}", file=sys.stderr)
+                arxiv_result = verify_arxiv(arxiv_id)
+                entry_report["arxiv_found"] = arxiv_result.get("found", False)
+                if not arxiv_result.get("found"):
+                    entry_report["issues"].append(f"arXiv: {arxiv_result.get('error', 'not found')}")
+                time.sleep(args.delay)
+
         if args.check_format:
             format_issues = check_format(entry)
             entry_report["issues"].extend(format_issues)
@@ -217,9 +308,13 @@ def main():
     # Summary
     total_issues = len(report["issues"])
     doi_invalid = sum(1 for v in report["checks"].values() if not v.get("doi_valid", True))
+    ss_not_found = sum(1 for v in report["checks"].values() if not v.get("semantic_scholar_found", True))
+    arxiv_not_found = sum(1 for v in report["checks"].values() if not v.get("arxiv_found", True))
     print(f"\n--- Citation Verification Report ---", file=sys.stderr)
     print(f"Total entries: {len(entries)}", file=sys.stderr)
     print(f"DOI invalid: {doi_invalid}", file=sys.stderr)
+    print(f"Semantic Scholar not found: {ss_not_found}", file=sys.stderr)
+    print(f"arXiv not found: {arxiv_not_found}", file=sys.stderr)
     print(f"Total issues: {total_issues}", file=sys.stderr)
 
     if total_issues == 0:

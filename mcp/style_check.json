@@ -1,0 +1,28 @@
+{
+  "name": "style_check",
+  "description": "De-AIification style checking for academic writing to remove AI-generated patterns",
+  "version": "1.0.0",
+  "protocol": "mcp",
+  "tools": [
+    {
+      "name": "check",
+      "description": "Check text for AI-generated patterns and mechanical transitions",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string",
+            "description": "Path to file or text string to check"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "zh"],
+            "description": "Language for AI pattern detection"
+          }
+        },
+        "required": ["input"]
+      },
+      "command": "bash scripts/style_check.sh"
+    }
+  ]
+}

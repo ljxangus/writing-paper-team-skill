@@ -1,7 +1,12 @@
 ---
 name: figures-python
 description: Use when creating data visualizations for papers - generates publication-quality plots with top-journal color schemes, 450 DPI output, and both PNG and SVG formats
-allowed-tools: Read Write Edit Bash
+# Hermes Agent
+tools: [bash, read, write, edit]
+# WorkBuddy MCP
+mcp_servers: []
+# Claude Code
+subagent_types: []
 ---
 
 # Figures Python — 顶刊级科研图表生成

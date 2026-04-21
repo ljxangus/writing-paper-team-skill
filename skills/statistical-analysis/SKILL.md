@@ -1,7 +1,12 @@
 ---
 name: statistical-analysis
 description: Use when performing statistical tests, reporting effect sizes, or writing statistical results in APA format for academic papers - covers test selection, assumption checking, effect size calculation, and reporting
-allowed-tools: Read Write Edit Bash
+# Hermes Agent
+tools: [bash, read, write, edit]
+# WorkBuddy MCP
+mcp_servers: []
+# Claude Code
+subagent_types: []
 ---
 
 # Statistical Analysis — 学术论文统计分析指南

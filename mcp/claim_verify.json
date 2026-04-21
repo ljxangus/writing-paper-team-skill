@@ -1,0 +1,27 @@
+{
+  "name": "claim_verify",
+  "description": "Fact-checking and claim verification against academic literature (future implementation)",
+  "version": "1.0.0",
+  "protocol": "mcp",
+  "tools": [
+    {
+      "name": "verify_claim",
+      "description": "Verify factual claims against literature sources",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "claim": {
+            "type": "string",
+            "description": "Claim statement to verify"
+          },
+          "context": {
+            "type": "string",
+            "description": "Additional context for verification"
+          }
+        },
+        "required": ["claim"]
+      },
+      "command": "python3 scripts/claim_verify.py"
+    }
+  ]
+}

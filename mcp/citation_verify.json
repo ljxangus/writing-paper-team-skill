@@ -1,0 +1,31 @@
+{
+  "name": "citation_verify",
+  "description": "Verify citation accuracy through DOI validation and cross-reference checking",
+  "version": "1.0.0",
+  "protocol": "mcp",
+  "tools": [
+    {
+      "name": "verify",
+      "description": "Verify citation accuracy and DOI validity",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string",
+            "description": "Path to BibTeX file or citation string"
+          },
+          "check_doi": {
+            "type": "boolean",
+            "description": "Enable DOI validation via CrossRef API"
+          },
+          "output": {
+            "type": "string",
+            "description": "Output file path for verification report"
+          }
+        },
+        "required": ["input"]
+      },
+      "command": "python3 scripts/citation_verify.py"
+    }
+  ]
+}

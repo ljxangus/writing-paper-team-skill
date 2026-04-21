@@ -66,6 +66,20 @@ BANNED_AI_WORDS=(
     "aforementioned" "plethora" "embark on"
 )
 
+# Defensive language / disclaimer patterns (Phase 2 item 8)
+BANNED_DISCLAIMERS=(
+    "to the best of our knowledge"
+    "as far as we know"
+    "it is generally accepted that"
+    "it is widely acknowledged that"
+    "it is commonly believed that"
+    "some might argue that"
+    "one could argue that"
+    "arguably"
+    "presumably"
+    "supposedly"
+)
+
 # -------------------------------------------------------------------------
 # Check functions
 # -------------------------------------------------------------------------
@@ -119,6 +133,16 @@ check_file() {
         count=${count:-0}
         if [[ "$count" -gt 0 ]]; then
             echo -e "  ${YELLOW}⚠ AI-flavored word: '$pattern' (found $count)${NC}"
+            file_issues=$((file_issues + count))
+        fi
+    done
+
+    # 3.7. Check defensive language / disclaimers
+    for pattern in "${BANNED_DISCLAIMERS[@]}"; do
+        count=$(grep -ci "$pattern" "$file" 2>/dev/null | head -1 || true)
+        count=${count:-0}
+        if [[ "$count" -gt 0 ]]; then
+            echo -e "  ${YELLOW}⚠ Defensive language: '$pattern' (found $count)${NC}"
             file_issues=$((file_issues + count))
         fi
     done

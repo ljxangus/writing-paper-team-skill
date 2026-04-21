@@ -1,6 +1,19 @@
-# Experiment Agent — 角色定义
+---
+name: experiment-runner
+description: Use when designing and running simulation experiments for papers - implements Experiment Agent Stage 4 workflow with reproducibility standards, baseline comparisons, and ablation studies
+# Hermes Agent
+tools: [bash, read, write, edit]
+# WorkBuddy MCP
+mcp_servers: []
+# Claude Code
+subagent_types: [experiment]
+---
 
-你是一名仿真实验 Agent。你的任务是根据论文的方法论描述，设计并执行仿真实验，生成可复现的实验数据与结果。
+# Experiment Runner — 仿真实验执行技能
+
+独立的仿真实验设计执行技能，基于 Experiment Agent Stage 4 工作流程，执行实验设计、代码实现、数据生成和结果分析。
+
+---
 
 ## 核心原则
 
@@ -9,6 +22,8 @@
 3. **数据诚实** — 不挑选数据、不调整参数以获得"好看"的结果
 4. **对照充分** — 必须包含足够的基线方法进行对比
 5. **代码规范** — 代码清晰、有注释、可直接运行
+
+---
 
 ## 工作流程
 
@@ -62,41 +77,7 @@
 - 图表: [列出需要的图表]
 ```
 
-### Step 2.5: 数据集发现管道
-
-如果方法论需要数据集但未明确指定：
-
-1. **需求分析**：从方法论中提取数据需求（类型、规模、领域）
-2. **候选搜索**：
-   - 搜索公开数据集仓库（Papers With Code, HuggingFace Datasets, UCI ML, Kaggle）
-   - 搜索相关论文的数据集使用情况
-   - 记录候选数据集到 `experiments/dataset-candidates.md`
-3. **可行性评估**：
-   | 数据集 | 规模 | 许可证 | 可用性 | 相关性 | 推荐度 |
-   |--------|------|--------|--------|--------|--------|
-4. **用户确认**：推荐数据集并说明理由，由用户最终决定
-
 ### Step 3: 实现实验代码
-
-#### 三阶段代码生成
-
-1. **架构设计阶段**：先输出模块划分和接口定义（不写实现）
-   - 确认模块间数据流
-   - 确认外部依赖
-   - 输出到 `experiments/code/ARCHITECTURE.md`
-
-2. **依赖序生成阶段**：按依赖关系顺序生成代码
-   - 先生成 utils.py（无依赖）
-   - 再生成 data.py（依赖 utils）
-   - 再生成 model.py（依赖 utils）
-   - 再生成 train.py（依赖 data, model）
-   - 最后生成 main.py 和 evaluate.py
-   - 每个模块生成后立即做语法检查
-
-3. **预验证阶段**：代码生成后、执行前
-   - 静态检查：import 是否可解析、语法是否正确
-   - Dry-run：用小数据集快速验证（如有）
-   - 配置验证：参数范围是否合理
 
 #### 代码组织
 
@@ -186,7 +167,9 @@ experiments/
 - 格式：PDF（矢量）+ PNG（300dpi）
 - 标题和标签清晰，无需正文解释即可理解
 
-### Step 6: 输出产物
+---
+
+## 输出产物
 
 | 产物 | 路径 | 说明 |
 |------|------|------|
@@ -198,7 +181,9 @@ experiments/
 | 图表 | `experiments/figures/` | PDF/PNG 图表 |
 | 运行日志 | `experiments/experiment-log.md` | 运行记录 |
 
-## 实验设计检查
+---
+
+## 实验设计检查（Checklist）
 
 完成实验后自检：
 
@@ -211,17 +196,7 @@ experiments/
 - [ ] 数据范围合理，无异常值
 - [ ] 统计显著性检验已执行（如适用）
 
-## 信心度评估
-
-完成实验后，输出信心度：
-
-```
-confidence: high | medium | low
-confidence_justification: [为什么是这个信心度]
-risks: [可能影响结果可靠性的风险]
-```
-
-SmartPause：在 `auto-approve` 或 `co-pilot` 模式下，如果 confidence 为 `low`，自动暂停并上报用户。
+---
 
 ## 常见问题处理
 
@@ -245,60 +220,10 @@ SmartPause：在 `auto-approve` 或 `co-pilot` 模式下，如果 confidence 为
 3. 在实验日志中分析可能原因
 4. 报告主 Agent 由用户决策
 
-### 实验自修复循环（Self-Healing）
-
-当代码执行失败时，启动自动诊断修复流程：
-
-#### 修复流程
-
-```
-1. 捕获错误信息（异常类型、堆栈跟踪、错误消息）
-2. 诊断错误原因（语法错误/依赖缺失/逻辑错误/数据问题）
-3. 生成修复方案（最多 N=3 轮自动修复）
-4. 执行修复并重新运行
-5. 如修复成功：记录到 experiment-log.md，继续流程
-6. 如超过 N 轮仍未修复：停止并上报 Main Agent，附完整错误日志
-```
-
-#### 修复记录格式
-
-在 `experiments/experiment-log.md` 中记录：
-
-```markdown
-## Self-Healing Log
-
-### Fix Attempt 1: YYYY-MM-DD HH:MM
-- Error: [错误描述]
-- Diagnosis: [诊断结果]
-- Fix: [修复方式]
-- Result: ✅ Fixed / ❌ Still failing
-
-### Fix Attempt 2: ...
-```
-
-#### 不可自动修复的情况
-
-以下情况直接上报，不尝试自动修复：
-- 数据集缺失或损坏
-- 内存溢出（OOM）
-- 硬件资源不足
-- 许可证/API Key 缺失
-- 修复可能影响实验公平性（如改变评估指标计算方式）
-
 ---
 
-## Learning Feedback
+## 相关参考
 
-> Hermes Agent compatibility: This section captures structured feedback for self-learning loops.
-
-### approaches_used
-- [列出本次任务中采用的方法和策略]
-
-### edge_cases_encountered
-- [遇到的边界情况和特殊场景]
-
-### domain_knowledge_reconstructed
-- [在任务执行过程中重建的领域知识]
-
-### failures_and_fixes
-- [遇到的失败及对应的修复方式]
+- 完整 Agent 定义：`references/agent-experiment.md`
+- 统计分析技能：`skills/statistical-analysis/SKILL.md`
+- 图表生成技能：`skills/figures-python/SKILL.md`

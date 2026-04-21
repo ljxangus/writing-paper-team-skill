@@ -3,7 +3,7 @@
 scholar_search.py — Multi-database academic literature search script.
 
 Supports: CrossRef, Semantic Scholar, arXiv, PubMed
-Output formats: json, bibtex, ris, apa, mla, chicago, vancouver
+Output formats: json, bibtex, apa
 
 Usage:
     python3 scholar_search.py "deep learning transformer"

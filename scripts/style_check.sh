@@ -57,6 +57,15 @@ BANNED_SUBJECTIVE=(
     "I believe" "I think" "I feel"
 )
 
+# AI high-frequency words (from writing-standards.md)
+BANNED_AI_WORDS=(
+    "leverage" "delve into" "comprehensive" "multifaceted"
+    "intricate" "nuanced" "paramount" "pivotal"
+    "notably" "underscores" "landscape" "realm"
+    "showcase" "depict" "facilitate" "harness"
+    "aforementioned" "plethora" "embark on"
+)
+
 # -------------------------------------------------------------------------
 # Check functions
 # -------------------------------------------------------------------------
@@ -76,7 +85,8 @@ check_file() {
 
     # 1. Check banned transitions
     for pattern in "${BANNED_TRANSITIONS[@]}"; do
-        count=$(grep -ciw "$pattern" "$file" 2>/dev/null || echo "0")
+        count=$(grep -ciw "$pattern" "$file" 2>/dev/null | head -1 || true)
+        count=${count:-0}
         if [[ "$count" -gt 0 ]]; then
             echo -e "  ${RED}✗ Banned transition: '$pattern' (found $count)${NC}"
             file_issues=$((file_issues + count))
@@ -85,7 +95,8 @@ check_file() {
 
     # 2. Check banned emphasis
     for pattern in "${BANNED_EMPHASIS[@]}"; do
-        count=$(grep -ci "$pattern" "$file" 2>/dev/null || echo "0")
+        count=$(grep -ci "$pattern" "$file" 2>/dev/null | head -1 || true)
+        count=${count:-0}
         if [[ "$count" -gt 0 ]]; then
             echo -e "  ${RED}✗ Empty emphasis: '$pattern' (found $count)${NC}"
             file_issues=$((file_issues + count))
@@ -94,30 +105,44 @@ check_file() {
 
     # 3. Check banned subjective expressions
     for pattern in "${BANNED_SUBJECTIVE[@]}"; do
-        count=$(grep -ci "$pattern" "$file" 2>/dev/null || echo "0")
+        count=$(grep -ci "$pattern" "$file" 2>/dev/null | head -1 || true)
+        count=${count:-0}
         if [[ "$count" -gt 0 ]]; then
             echo -e "  ${RED}✗ Subjective expression: '$pattern' (found $count)${NC}"
             file_issues=$((file_issues + count))
         fi
     done
 
+    # 3.5. Check AI high-frequency words
+    for pattern in "${BANNED_AI_WORDS[@]}"; do
+        count=$(grep -ciw "$pattern" "$file" 2>/dev/null | head -1 || true)
+        count=${count:-0}
+        if [[ "$count" -gt 0 ]]; then
+            echo -e "  ${YELLOW}⚠ AI-flavored word: '$pattern' (found $count)${NC}"
+            file_issues=$((file_issues + count))
+        fi
+    done
+
     # 4. Check bullet lists in body text (lines starting with - or * that are not in headings)
     # Skip lines that are clearly in a checklist or plan section
-    bullet_count=$(grep -cE '^\s*[-*] ' "$file" 2>/dev/null || echo "0")
+    bullet_count=$(grep -cE '^\s*[-*] ' "$file" 2>/dev/null | head -1 || true)
+    bullet_count=${bullet_count:-0}
     if [[ "$bullet_count" -gt 5 ]]; then
         echo -e "  ${YELLOW}⚠ Excessive bullet points: $bullet_count (consider converting to paragraphs)${NC}"
         file_issues=$((file_issues + 1))
     fi
 
     # 5. Check bold text in body (excluding headings and first definitions)
-    bold_count=$(grep -cE '\*\*[^*]+\*\*' "$file" 2>/dev/null || echo "0")
+    bold_count=$(grep -cE '\*\*[^*]+\*\*' "$file" 2>/dev/null | head -1 || true)
+    bold_count=${bold_count:-0}
     if [[ "$bold_count" -gt 8 ]]; then
         echo -e "  ${YELLOW}⚠ Excessive bold text: $bold_count occurrences (avoid bold in body text)${NC}"
         file_issues=$((file_issues + 1))
     fi
 
     # 6. Word count
-    word_count=$(wc -w < "$file" 2>/dev/null || echo "0")
+    word_count=$(wc -w < "$file" 2>/dev/null | tr -d ' ' || true)
+    word_count=${word_count:-0}
     echo -e "  ${GREEN}ℹ Word count: $word_count${NC}"
 
     # Summary for this file

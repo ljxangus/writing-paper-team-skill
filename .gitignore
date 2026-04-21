@@ -1,0 +1,43 @@
+# WorkBuddy Skill packaging output
+*.zip
+*.skill
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# LaTeX build artifacts
+*.log
+*.aux
+*.bbl
+*.blg
+*.out
+*.synctex.gz
+*.fls
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Build artifacts in user template dir
+latex-templates/*.tex
+latex-templates/*.cls
+latex-templates/*.sty
+latex-templates/*.bib
+
+# Experiments output (keep source code, not generated PDFs/images)
+# experiments/figures/*.pdf
+# experiments/figures/*.png

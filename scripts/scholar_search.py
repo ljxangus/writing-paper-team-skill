@@ -2,13 +2,13 @@
 """
 scholar_search.py — Multi-database academic literature search script.
 
-Supports: CrossRef, Semantic Scholar, arXiv, PubMed
+Supports: CrossRef, Semantic Scholar, arXiv
 Output formats: json, bibtex, apa
 
 Usage:
     python3 scholar_search.py "deep learning transformer"
     python3 scholar_search.py "neural network" --sources crossref,semanticscholar --year 2023-2026
-    python3 scholar_search.py "landslide detection" --format bibtex -o refs.bib
+    python3 scholar_search.py "network traffic classification" --format bibtex -o refs.bib
     python3 scholar_search.py "attention mechanism" --format apa --limit 5
 """
 
@@ -192,62 +192,6 @@ def search_arxiv(query: str, year_from: Optional[int] = None,
 
 
 # ---------------------------------------------------------------------------
-# PubMed
-# ---------------------------------------------------------------------------
-
-def search_pubmed(query: str, year_from: Optional[int] = None,
-                  year_to: Optional[int] = None, limit: int = 20) -> List[dict]:
-    """Search PubMed via its public E-utilities API."""
-    # Step 1: Get PMIDs
-    search_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-    params = {
-        "db": "pubmed",
-        "term": query,
-        "retmax": min(limit, 50),
-        "retmode": "json",
-    }
-    if year_from or year_to:
-        yf = year_from or 1900
-        yt = year_to or datetime.now().year
-        params["mindate"] = f"{yf}/01/01"
-        params["maxdate"] = f"{yt}/12/31"
-        params["datetype"] = "pdat"
-
-    url = f"{search_url}?{urllib.parse.urlencode(params)}"
-    data = _fetch_json(url)
-    id_list = data.get("esearchresult", {}).get("idlist", [])
-
-    if not id_list:
-        return []
-
-    # Step 2: Fetch summaries
-    time.sleep(0.34)  # PubMed rate limit: ~3 req/s
-    summary_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
-    params2 = {
-        "db": "pubmed",
-        "id": ",".join(id_list),
-        "retmode": "json",
-    }
-    url2 = f"{summary_url}?{urllib.parse.urlencode(params2)}"
-    data2 = _fetch_json(url2)
-
-    results = []
-    for pmid in id_list:
-        info = data2.get("result", {}).get(pmid, {})
-        authors = [a.get("name", "") for a in info.get("authors", [])]
-        results.append({
-            "source": "pubmed",
-            "doi": "",
-            "pmid": pmid,
-            "title": _sanitize(info.get("title", "")),
-            "authors": "; ".join(authors),
-            "year": info.get("pubdate", "")[:4] if info.get("pubdate") else None,
-            "venue": _sanitize(info.get("source", "")) or "N/A",
-        })
-    return results
-
-
-# ---------------------------------------------------------------------------
 # Output formatters
 # ---------------------------------------------------------------------------
 
@@ -305,7 +249,6 @@ SEARCH_FUNCS = {
     "crossref": search_crossref,
     "semanticscholar": search_semanticscholar,
     "arxiv": search_arxiv,
-    "pubmed": search_pubmed,
 }
 
 FORMAT_FUNCS = {

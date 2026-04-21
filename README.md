@@ -145,7 +145,7 @@ git clone https://github.com/ljxangus/writing-paper-team-skill.git \
 ### Stage 2 — Deep Search
 
 DeepSearch Agent 执行：
-- 多数据库文献搜索（Semantic Scholar / CrossRef / arXiv / PubMed）
+- 多数据库文献搜索（Semantic Scholar / CrossRef / arXiv）
 - 高相关性论文筛选（相关性评分 ≥ 7/10）
 - **知识卡片**提取（结构化跨论文对比数据）
 - RelatedWork 按主题分类

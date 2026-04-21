@@ -46,7 +46,7 @@ pip install matplotlib seaborn numpy pandas
 | 用途 | DPI | 说明 |
 |------|-----|------|
 | 期刊投稿 | 300-600 | 大多数期刊要求 |
-| 顶刊投稿 | 450+ | Nature/Science 等 |
+| 顶刊投稿 | 450+ | IEEE/ACM 顶级会议期刊 |
 | 屏幕展示 | 150 | PPT/网页 |
 
 > **本技能默认使用 450 DPI**
@@ -69,16 +69,16 @@ pip install matplotlib seaborn numpy pandas
 
 ## 三、顶刊配色方案
 
-### 3.1 Nature/Science 风格
+### 3.1 SIGCOMM/INFOCOM 风格
 
 ```python
-NATURE_COLORS = ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#95C623']
+SIGCOMM_COLORS = ['#2E86AB', '#A23B72', '#F18F01', '#C73E1D', '#95C623']
 ```
 
-### 3.2 Cell 风格
+### 3.2 CVPR/NeurIPS 风格
 
 ```python
-CELL_COLORS = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948']
+ML_COLORS = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948']
 ```
 
 ### 3.3 色盲友好配色

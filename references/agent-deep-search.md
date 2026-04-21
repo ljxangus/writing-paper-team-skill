@@ -44,7 +44,7 @@ python3 scripts/scholar_search.py "query" --sources crossref --format bibtex -o 
 
 #### 3.2 已有 Skill 增强
 
-- 调用 `paper-lookup` skill 覆盖更多数据库（PubMed, bioRxiv, medRxiv, OpenAlex, CORE, Unpaywall）
+- 调用 `paper-lookup` skill 覆盖更多数据库（OpenAlex, CORE, Unpaywall）
 - 调用 `ArXiv论文精读` skill 对关键论文进行深度阅读
 
 #### 3.3 WebSearch 补充

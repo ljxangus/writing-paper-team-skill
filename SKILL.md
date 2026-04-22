@@ -731,9 +731,10 @@ compile-report.md     # 编译报告 ✅
 
 ## 版本信息
 
-- **版本**：2.0.0
+- **版本**：2.1.0
 - **基础**：Norman-bury/research-writing-skill v3.1.0 + ljxangus/research-writing-skill
 - **核心改造**：单 Agent → Agent Teams 多智能体协作
+- **v2.1 新增**：仿真方法论体系（反伪造禁令 + 5 类领域仿真最低要求 + 强制证据产物 + Audit 仿真验证 12 项检查 + 仿真计划模板）
 - **v2.0 新增**：跨平台兼容（Claude Code / Hermes Agent / WorkBuddy）/ 多干预模式 / 研究决策点 / 问题分解 / 实验自修复 / 知识卡片 / 知识综合 / 反伪造验证 / 假设辩论 / SmartPause / 成本防护 / 伦理准则 / 跨项目学习
 - **v1.1 新增**：latex-output / prompts-collection / figures-python / statistical-analysis / 两阶段 Review / 验证门控五步法 / latex-templates 目录
 - **目标**：IEEE/ACM 顶会顶刊论文写作

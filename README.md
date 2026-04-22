@@ -1,11 +1,13 @@
 # Multi-Agent Research Paper Writing Skill
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![Version](https://img.shields.io/badge/version-2.1.0-blue)
 ![Stage](https://img.shields.io/badge/Stage-7%20phase%20pipeline-orange)
 ![Standard](https://img.shields.io/badge/Standard-IEEE%2FACM-green)
 ![Platform](https://img.shields.io/badge/Platform-Claude%20Code%20%7C%20Hermes%20%7C%20WorkBuddy-purple)
 
 面向 IEEE/ACM 顶会顶刊的学术论文写作 Skill，采用 **Agent Teams** 多智能体协作架构。从选题到引用终审，全流程自动化。
+
+**v2.1.0** 新增仿真方法论体系：反伪造禁令、5 类领域仿真最低要求、强制证据产物（事件日志/中间状态/wall-clock 计时）、仿真计划模板、Audit 仿真验证 12 项检查。
 
 **v2.0.0** 新增跨平台支持（Claude Code / Hermes Agent / WorkBuddy）、多干预模式、研究决策点、知识综合、反伪造验证等 22 项功能改进。
 
@@ -180,6 +182,7 @@ Writing Agent 按章节撰写：
 
 Experiment Agent：
 - 仿真方案设计（三阶段代码生成：架构→依赖序→预验证）
+- **仿真方法论合规**（禁止解析式代替仿真，强制证据产物）
 - 代码编写与执行
 - **自修复循环**（代码失败时自动诊断修复，最多 3 轮）
 - **数据集发现管道**（自动搜索公开数据集）
@@ -188,6 +191,7 @@ Experiment Agent：
 Audit Agent：
 - 实验设计与论文声称一致性
 - 数据合理性验证
+- **仿真验证（12 项检查）**：事件日志、中间状态、wall-clock 计时、代码仿真循环、随机元素追溯
 - **声明-数据交叉验证**（`scripts/claim_verify.py`）
 - 可复现性确认
 - 统计有效性审查
@@ -228,8 +232,8 @@ Audit Agent 引用终审：
 |-------|-------|----------|----------|
 | DeepSearch Agent | 2 | 文献搜索 + 知识卡片 + RelatedWork + 研究空白 | `related-work.md`, `papers/*.json` |
 | Writing Agent | 3, 5 | 论文章节写作 + 综合修改 | `chapters/*.md` |
-| Experiment Agent | 4 | 仿真实验（含自修复 + 数据集发现 + 三阶段代码生成） | `experiments/` |
-| Audit Agent | 4, 6 | 实验审查 + 决策门 + 声明验证 + 引用终审 | `audit-report.md` |
+| Experiment Agent | 4 | 仿真实验（含自修复 + 数据集发现 + 三阶段代码生成 + **仿真方法论合规**） | `experiments/` |
+| Audit Agent | 4, 6 | 实验审查 + **仿真验证（12项）** + 决策门 + 声明验证 + 引用终审 | `audit-report.md` |
 | Reviewer ×3 | 5 | IEEE/ACM 标准独立审稿（含论文-证据一致性） | `review-*.md` |
 | Hypothesis Debate | 1.5 | Proponent/Skeptic 双 Agent 假设辩论 | `plan/hypothesis-debate.md` |
 
@@ -296,8 +300,8 @@ writing-paper-team-skill/
 ├── references/                        # Agent 角色定义与参考文档
 │   ├── agent-deep-search.md           # DeepSearch Agent（含知识卡片 + 信心度）
 │   ├── agent-writing.md               # Writing Agent（含长度守卫）
-│   ├── agent-experiment.md            # Experiment Agent（含自修复 + 数据集发现 + 三阶段代码生成）
-│   ├── agent-audit.md                 # Audit Agent（含决策门 + 声明验证）
+│   ├── agent-experiment.md            # Experiment Agent（含仿真方法论 + 自修复 + 数据集发现 + 三阶段代码生成）
+│   ├── agent-audit.md                 # Audit Agent（含仿真验证12项 + 决策门 + 声明验证）
 │   ├── agent-reviewer.md              # Reviewer Agent（含论文-证据一致性检查）
 │   ├── agent-hypothesis-debate.md     # 假设辩论 Agent（Proponent/Skeptic）
 │   ├── writing-standards.md           # 去AI化写作标准 + 反免责声明
@@ -334,6 +338,7 @@ writing-paper-team-skill/
 │   └── templates/
 │       ├── problem-tree.md            # 问题分解模板
 │       ├── research-gaps.md           # 知识综合缺口分析模板
+│       ├── simulation-plan.md         # 仿真方法论声明与反伪造合规模板
 │       └── branch-log.md              # 管道分支并行探索模板
 │
 ├── lessons-learned/                   # 跨项目学习（Hermes Agent 兼容）
@@ -428,6 +433,7 @@ writing-paper-team-skill/
 
 | 版本 | 日期 | 变化 |
 |------|------|------|
+| v2.1.0 | 2026-04-23 | **仿真方法论体系**：反伪造禁令（禁止解析式代替仿真）+ 5 类领域仿真最低要求（网络包级/流级/排队/ML/分布式）+ 强制证据产物（事件日志/中间状态/wall-clock 计时）+ 仿真计划模板 + Audit 仿真验证 12 项检查 |
 | v2.0.0 | 2026-04-22 | **跨平台三平台兼容**（Claude Code / Hermes Agent / WorkBuddy）+ 22 项功能改进：多干预模式 / 研究决策点 / 问题分解 / 实验自修复 / 知识卡片 / 知识综合 / 反伪造验证 / 假设辩论 / SmartPause / 成本防护 / 伦理准则 / 四层引用验证 / 跨项目学习 等 |
 | v1.1.0 | 2026-04-21 | 新增 latex-output / prompts-collection / figures-python / statistical-analysis 子技能；强化 Audit Agent 五步验证门控；强化 Reviewer Agent 两阶段审稿；latex-templates 目录 |
 | v1.0.0 | 2026-04-10 | 初始版本：六阶段 Agent Teams 流水线 + 三审机制 |

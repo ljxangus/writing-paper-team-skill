@@ -1,6 +1,6 @@
 ---
 name: latex-output
-description: Use when user asks to output paper as LaTeX, provides a LaTeX template, or targets a journal requiring LaTeX format - converts Markdown chapters to compilable .tex files with BibTeX references
+description: Use when user asks to output paper as LaTeX, generate PDF from LaTeX, provides a LaTeX template, or targets a journal requiring LaTeX format - converts Markdown chapters to compilable .tex files, compiles to PDF with latexmk/xelatex/pdflatex, and validates the output
 # Hermes Agent
 tools: [bash, read, write, edit]
 # WorkBuddy MCP
@@ -229,27 +229,106 @@ Abstract content here.
 
 ---
 
-## 七、编译说明
+## 七、LaTeX → PDF 编译流程
 
-### 7.1 推荐编译命令
+### 7.1 编译环境检测
+
+编译前**必须**先检测系统 LaTeX 环境：
 
 ```bash
-# 一键编译（推荐）
-latexmk -xelatex main.tex
+# 检测编译工具链
+which latexmk && latexmk --version
+which xelatex && xelatex --version | head -1
+which pdflatex && pdflatex --version | head -1
+which bibtex && bibtex --version | head -1
+which biber && biber --version | head -1
 
-# 手动编译（标准流程）
-xelatex main.tex
-bibtex main
-xelatex main.tex
-xelatex main.tex
+# 检测 IEEEtran / acmart 文档类是否可用
+kpsewhich IEEEtran.cls
+kpsewhich acmart.cls
 ```
 
-### 7.2 中文论文编译
+**环境不满足时的处理：**
+
+| 缺失组件 | 处理方式 |
+|----------|----------|
+| 无 latexmk | 使用手动编译流程（xelatex → bibtex → xelatex ×2） |
+| 无 xelatex | 降级为 pdflatex（不支持中文） |
+| 无 bibtex/biber | 警告用户引用可能无法解析 |
+| 缺少文档类 | 提示安装：`tlmgr install ieee-conf` 或 `tlmgr install acmart` |
+
+### 7.2 编译策略选择
+
+根据论文特征自动选择编译策略：
+
+| 场景 | 编译引擎 | 命令 |
+|------|----------|------|
+| 中文论文 / 含 Unicode | XeLaTeX | `latexmk -xelatex main.tex` |
+| 纯英文 IEEE 论文 | pdfLaTeX | `latexmk -pdf main.tex` |
+| 含复杂字体需求 | LuaLaTeX | `latexmk -lualatex main.tex` |
+| 用户指定引擎 | 用户选择 | 按用户指定 |
+
+**自动判断逻辑：**
+1. `main.tex` 中含 `\usepackage{ctex}` 或 `\usepackage{xeCJK}` → XeLaTeX
+2. `main.tex` 中含中文内容（正则检测 `[\x{4e00}-\x{9fff}]`）→ XeLaTeX
+3. 用户模板 `.cls` 文件名含 `ctex` → XeLaTeX
+4. 默认 → pdfLaTeX（纯英文 IEEE 论文最快）
+
+### 7.3 一键编译（推荐）
+
+```bash
+# 进入 tex 输出目录
+cd <project-root>/tex/
+
+# XeLaTeX 编译（中文 / Unicode）
+latexmk -xelatex -interaction=nonstopmode -file-line-error main.tex
+
+# pdfLaTeX 编译（纯英文）
+latexmk -pdf -interaction=nonstopmode -file-line-error main.tex
+
+# 清理辅助文件（编译成功后）
+latexmk -c
+```
+
+**latexmk 参数说明：**
+
+| 参数 | 说明 |
+|------|------|
+| `-xelatex` / `-pdf` / `-lualatex` | 指定编译引擎 |
+| `-interaction=nonstopmode` | 遇到错误不停止（收集所有错误） |
+| `-file-line-error` | 错误信息含文件名和行号 |
+| `-c` | 清理辅助文件（保留 PDF） |
+| `-C` | 清理所有生成文件（含 PDF） |
+| `-outdir=build/` | 输出到指定目录 |
+
+### 7.4 手动编译（标准四步流程）
+
+当 `latexmk` 不可用时：
+
+```bash
+cd <project-root>/tex/
+
+# Step 1: 首次编译（生成 .aux 文件）
+xelatex -interaction=nonstopmode main.tex
+
+# Step 2: 处理引用（生成 .bbl 文件）
+bibtex main
+
+# Step 3: 第二次编译（解析引用）
+xelatex -interaction=nonstopmode main.tex
+
+# Step 4: 第三次编译（确保交叉引用正确）
+xelatex -interaction=nonstopmode main.tex
+```
+
+> ⚠️ 四步流程不可省略，否则引用和交叉引用可能不正确。
+
+### 7.5 中文论文编译
 
 中文环境**必须**使用 XeLaTeX 或 LuaLaTeX：
 
 ```bash
-latexmk -xelatex main.tex
+latexmk -xelatex -interaction=nonstopmode main.tex
 ```
 
 并在 `main.tex` 中添加：
@@ -258,7 +337,38 @@ latexmk -xelatex main.tex
 \usepackage{ctex}  % 或 \usepackage{xeCJK}
 ```
 
-### 7.3 常见编译错误处理
+### 7.6 编译结果验证
+
+编译完成后**必须**验证 PDF 生成：
+
+```bash
+# 检查 PDF 是否生成
+ls -la main.pdf
+
+# 检查 PDF 页数
+pdfinfo main.pdf 2>/dev/null || echo "pdfinfo not available"
+
+# 检查编译日志中的错误
+grep -c "^!" main.log || echo "0 errors"
+
+# 检查未定义引用
+grep -c "Citation.*undefined" main.log || echo "0 undefined citations"
+
+# 检查缺失图片
+grep -c "File.*not found" main.log || echo "0 missing files"
+```
+
+**验证门控：**
+
+| 检查项 | 通过条件 | 不通过处理 |
+|--------|----------|------------|
+| PDF 生成 | `main.pdf` 存在且 > 0 bytes | 检查编译日志修复错误 |
+| 无致命错误 | `grep "^!" main.log` 返回 0 条 | 逐条修复后重新编译 |
+| 引用完整 | 无 "Citation undefined" 警告 | 重新运行 bibtex + xelatex |
+| 图片完整 | 无 "File not found" 警告 | 检查图片路径 |
+| 页数合理 | PDF 页数 ≥ 预期（非 0 页或 1 页） | 检查 main.tex 结构 |
+
+### 7.7 常见编译错误处理
 
 | 错误 | 原因 | 解决方案 |
 |------|------|----------|
@@ -268,6 +378,83 @@ latexmk -xelatex main.tex
 | `Citation undefined` | BibTeX 未正确运行 | 执行完整编译流程 |
 | `Encoding error` | 非ASCII字符 | 使用 XeLaTeX + ctex |
 | `Overfull hbox` | 行溢出 | 调整 `\sloppy` 或调整文字 |
+| `Missing package` | 缺少 LaTeX 宏包 | `tlmgr install <package>` |
+| `Font not found` | 缺少字体 | 检查字体路径或使用 ctex 默认字体 |
+| `BibTeX/Biber mismatch` | 引用处理器与配置不匹配 | 检查 `biblatex` 使用 biber，`natbib` 使用 bibtex |
+| `Too many unprocessed floats` | 浮动体过多 | 添加 `\clearpage` 或使用 `[H]` 选项 |
+
+### 7.8 编译辅助文件清理
+
+编译成功后清理辅助文件，保持目录整洁：
+
+```bash
+# 仅清理辅助文件（保留 PDF）
+latexmk -c
+
+# 或手动清理
+rm -f *.aux *.log *.out *.bbl *.blg *.toc *.lof *.lot *.fls *.fdb_latexmk *.synctex.gz
+```
+
+---
+
+## 八、PDF 交付
+
+### 8.1 PDF 输出路径
+
+```
+<project-root>/
+├── tex/
+│   ├── main.tex
+│   ├── main.pdf          ← 编译生成的 PDF
+│   └── ...
+├── output/               ← 交付目录（可选）
+│   ├── paper-v1.0.pdf    ← 带版本号的交付 PDF
+│   └── compile-report.md ← 编译报告
+└── ...
+```
+
+### 8.2 编译报告
+
+编译完成后生成 `compile-report.md`：
+
+```markdown
+# LaTeX Compilation Report
+
+## 基本信息
+- 编译时间: YYYY-MM-DD HH:MM
+- 编译引擎: XeLaTeX / pdfLaTeX / LuaLaTeX
+- 编译次数: N 次（含 bibtex）
+- 文档类: IEEEtran / acmart / 其他
+
+## 编译结果
+- ✅ PDF 生成成功
+- PDF 路径: tex/main.pdf
+- PDF 页数: N 页
+- PDF 大小: X.XX MB
+
+## 警告统计
+- Undefined citations: 0
+- Missing files: 0
+- Overfull hbox: N
+- Other warnings: N
+
+## 错误列表
+（如有错误，逐条列出文件名:行号:错误信息）
+```
+
+### 8.3 PDF 预览
+
+编译成功后，使用系统默认 PDF 阅读器打开预览：
+
+```bash
+# macOS
+open main.pdf
+
+# Linux
+xdg-open main.pdf
+
+# 或使用 WorkBuddy 的预览功能
+```
 
 ---
 
@@ -289,3 +476,8 @@ latexmk -xelatex main.tex
 - [ ] 图片路径正确，图片可见
 - [ ] PDF 输出内容与 Markdown 原文一致
 - [ ] 无 LaTeX 编译警告（或已处理）
+- [ ] **PDF 文件已生成**且大小 > 0 bytes
+- [ ] **PDF 页数合理**（非 0 页或异常 1 页）
+- [ ] **无未定义引用**（`grep "Citation.*undefined" main.log` 返回 0）
+- [ ] **无缺失图片**（`grep "File.*not found" main.log` 返回 0）
+- [ ] **编译报告已生成**（`compile-report.md`）
